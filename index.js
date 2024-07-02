@@ -145,9 +145,10 @@ class Rat {
     }
 }
 class sceneOption {
-    constructor(id, text, requirements) {
+    constructor(id, text, nextScene, requirements) {
         this.id = id;
         this.text = (text ? text : "Option");
+        this.nextScene = nextScene;
         this.requirements = (requirements ? requirements : () => { return (true); });
     }
 }
@@ -158,18 +159,38 @@ class Scene {
         this.options = options;
     }
 }
+function loadScene(scene) {
+    var _a;
+    for (let i of document.getElementById("mainContent").getElementsByClassName("scene")) {
+        i.remove();
+    }
+    (_a = document.getElementById("mainContent")) === null || _a === void 0 ? void 0 : _a.appendChild(extractElementFromScene(scene));
+}
 function extractElementFromScene(scene) {
     let outputElement = document.createElement('div');
     outputElement.id = scene.id;
     outputElement.appendChild(document.createElement('h2'));
     outputElement.children[0].innerHTML = scene.text;
+    outputElement.classList.add("scene");
     for (let i of scene.options) {
         let newOption = document.createElement('p');
         newOption.classList.add("sceneChoice");
         newOption.innerHTML = i.text;
         newOption.id = i.id;
+        newOption.onclick = () => {
+            if (i.requirements()) {
+                if (i.nextScene instanceof Scene) {
+                    loadScene(i.nextScene);
+                }
+                else if (i.nextScene instanceof Function) {
+                    i.nextScene();
+                }
+            }
+        };
+        if (!i.requirements()) {
+            newOption.classList.add("lockedSceneChoice");
+        }
         outputElement.appendChild(newOption);
-        outputElement.appendChild(document.createElement("br"));
     }
     return (outputElement);
 }
@@ -194,8 +215,13 @@ function toggleMenu() {
         playerData.menuActivated = !playerData.menuActivated;
     });
 }
+let gregScene = new Scene("opening", "Welcome to,, the RAT GAME (balls)", [
+    new sceneOption("lockedOption", "this option should be locked", new Scene("lockedScene", "You shouldn't be here", []), () => false),
+    new sceneOption("openingoption1", "The first option. Standard", new Scene("opt1", "Welcome to greg town :)", [
+        new sceneOption("goBack", "go back", new Scene("nowayback", "no way back :(", []))
+    ])),
+]);
 function afterLoad() {
-    var _a;
-    (_a = document.getElementById("mainContent")) === null || _a === void 0 ? void 0 : _a.appendChild(extractElementFromScene(new Scene("balls", "random scene text", [new sceneOption("option 1", "option 1 text")])));
-    document.addEventListener("mousedown", () => toggleMenu());
+    loadScene(gregScene);
+    //document.addEventListener("mousedown",()=>toggleMenu())
 }

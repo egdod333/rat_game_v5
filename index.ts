@@ -4,7 +4,7 @@ var playerData = {
     menuActivated:false,
 }
 
-//hey, idealized instance of my future self, add clicking on menu options please
+//hey, idealized instance of my future self, add clicking on scene options please
 type stats = {
     strength:number
     intelligence:number
@@ -186,11 +186,13 @@ class Rat {
 }
 class sceneOption {
     id:string;
-    text?:string;
+    text:string;
     requirements?: (() => boolean)
-    constructor(id:string,text?:string,requirements?:(()=>boolean)) {
+    nextScene:Scene | null | Function
+    constructor(id:string,text:string,nextScene:Scene | null,requirements?:(()=>boolean)) {
         this.id=id
         this.text=(text?text:"Option")
+        this.nextScene=nextScene
         this.requirements=(requirements?requirements:()=>{return(true)})
     }
 }
@@ -204,18 +206,36 @@ class Scene {
         this.options=options
     }
 }
+function loadScene(scene: Scene) {
+    for(let i of document.getElementById("mainContent")!.getElementsByClassName("scene")){
+        i.remove()
+    }
+    document.getElementById("mainContent")?.appendChild(extractElementFromScene(scene))
+}
 function extractElementFromScene(scene: Scene) {
     let outputElement = document.createElement('div')
     outputElement.id=scene.id
     outputElement.appendChild(document.createElement('h2'))
     outputElement.children[0].innerHTML=scene.text
+    outputElement.classList.add("scene")
     for(let i of scene.options) {
         let newOption = document.createElement('p')
         newOption.classList.add("sceneChoice")
         newOption.innerHTML=(i.text as string)
         newOption.id=i.id
+        newOption.onclick=()=>{
+            if(i.requirements!()) {
+                if(i.nextScene instanceof Scene){
+                    loadScene(i.nextScene as Scene)
+                } else if( i.nextScene instanceof Function) {
+                    i.nextScene()
+                }
+            }
+        }
+        if(!i.requirements!()) {
+            newOption.classList.add("lockedSceneChoice")
+        }
         outputElement.appendChild(newOption)
-        outputElement.appendChild(document.createElement("br"))
     }
     return(outputElement)
 }
@@ -237,8 +257,13 @@ async function toggleMenu() {
     playerData.menuActivated=!playerData.menuActivated
     
 }
-
+let gregScene = new Scene("opening","Welcome to,, the RAT GAME (balls)",[
+    new sceneOption("lockedOption","this option should be locked",new Scene("lockedScene","You shouldn't be here",[]),()=>false),
+    new sceneOption("openingoption1","The first option. Standard",new Scene("opt1","Welcome to greg town :)",[
+        new sceneOption("goBack","go back",new Scene("nowayback","no way back :(",[]))
+    ])),
+])
 function afterLoad() {
-    document.getElementById("mainContent")?.appendChild(extractElementFromScene(new Scene("balls","random scene text",[new sceneOption("option 1","option 1 text")])))
-    document.addEventListener("mousedown",()=>toggleMenu())
+    loadScene(gregScene)
+    //document.addEventListener("mousedown",()=>toggleMenu())
 }
