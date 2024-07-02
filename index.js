@@ -1,4 +1,16 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var playerData = {
+    menuActivated: false,
+};
 class EquipmentItem {
     constructor(wearableOn, attributesOn) {
         this.wearableOn = wearableOn;
@@ -161,6 +173,29 @@ function extractElementFromScene(scene) {
     }
     return (outputElement);
 }
+function toggleMenu() {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        let menuBoundingRectangle = (_a = document.getElementById("menu")) === null || _a === void 0 ? void 0 : _a.getBoundingClientRect();
+        if (playerData.menuActivated) {
+            for (let i = 0; i < menuBoundingRectangle.height; i++) {
+                document.getElementById('menu').style.top = (-1 * i) + 'px';
+                document.getElementById('mainContent').style.top = (-1 * i) + menuBoundingRectangle.height + 'px';
+                yield new Promise((resolve) => setTimeout(resolve, 10));
+            }
+        }
+        else {
+            for (let i = menuBoundingRectangle.height; i > 0; i--) {
+                document.getElementById('menu').style.top = (menuBoundingRectangle.height - i) - menuBoundingRectangle.height + 'px';
+                document.getElementById('mainContent').style.top = (menuBoundingRectangle.height - i) + 'px';
+                yield new Promise((resolve) => setTimeout(resolve, 10));
+            }
+        }
+        playerData.menuActivated = !playerData.menuActivated;
+    });
+}
 function afterLoad() {
-    document.body.appendChild(extractElementFromScene(new Scene("balls", "random scene text", [new sceneOption("option 1", "option 1 text")])));
+    var _a;
+    (_a = document.getElementById("mainContent")) === null || _a === void 0 ? void 0 : _a.appendChild(extractElementFromScene(new Scene("balls", "random scene text", [new sceneOption("option 1", "option 1 text")])));
+    document.addEventListener("mousedown", () => toggleMenu());
 }

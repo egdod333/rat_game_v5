@@ -1,5 +1,10 @@
 type itemType = "rat" | "equipment"
 type equipmentLocation = "head" | "leg" | "body" | "tail"
+var playerData = {
+    menuActivated:false,
+}
+
+//hey, idealized instance of my future self, add clicking on menu options please
 type stats = {
     strength:number
     intelligence:number
@@ -214,6 +219,26 @@ function extractElementFromScene(scene: Scene) {
     }
     return(outputElement)
 }
+async function toggleMenu() {
+    let menuBoundingRectangle = document.getElementById("menu")?.getBoundingClientRect();
+    if(playerData.menuActivated){
+        for(let i = 0;i<menuBoundingRectangle!.height;i++) {
+            document.getElementById('menu')!.style.top = (-1*i)+'px'
+            document.getElementById('mainContent')!.style.top = (-1*i)+menuBoundingRectangle!.height+'px'
+            await new Promise((resolve)=>setTimeout(resolve,10))
+        }
+    } else {
+        for(let i=menuBoundingRectangle!.height;i>0;i--) {
+            document.getElementById('menu')!.style.top = (menuBoundingRectangle!.height-i)-menuBoundingRectangle!.height+'px'
+            document.getElementById('mainContent')!.style.top = (menuBoundingRectangle!.height-i)+'px'
+            await new Promise((resolve)=>setTimeout(resolve,10))
+        }
+    }
+    playerData.menuActivated=!playerData.menuActivated
+    
+}
+
 function afterLoad() {
-    document.body.appendChild(extractElementFromScene(new Scene("balls","random scene text",[new sceneOption("option 1","option 1 text")])))
+    document.getElementById("mainContent")?.appendChild(extractElementFromScene(new Scene("balls","random scene text",[new sceneOption("option 1","option 1 text")])))
+    document.addEventListener("mousedown",()=>toggleMenu())
 }
