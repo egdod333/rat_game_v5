@@ -236,11 +236,13 @@ class abilityCost {
 }
 class playerAbility {
     name:string;
-    cost:abilityCost
+    cost:abilityCost;
+    effect:Function;
     cooldown?:number;
-    constructor(name:string,cost:abilityCost,cooldown?:number) {
+    constructor(name:string,cost:abilityCost,effect:Function,cooldown?:number) {
         this.name=name
         this.cost=cost
+        this.effect=effect
         this.cooldown=(cooldown?cooldown:0)
     }
 

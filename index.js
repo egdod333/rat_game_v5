@@ -176,9 +176,10 @@ class abilityCost {
     }
 }
 class playerAbility {
-    constructor(name, cost, cooldown) {
+    constructor(name, cost, effect, cooldown) {
         this.name = name;
         this.cost = cost;
+        this.effect = effect;
         this.cooldown = (cooldown ? cooldown : 0);
     }
 }
