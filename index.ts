@@ -1,5 +1,13 @@
 type itemType = "rat" | "equipment"
 type equipmentLocation = "head" | "leg" | "body" | "tail"
+type combatData = {
+    //expand on later? use not just for player but enemies too
+    maxHealth:number
+    health:number
+    damageResistPercent:number
+
+}
+type statusEffectName = "radiation" | "fire" | "exhaustion"
 
 type stats = {
     strength:number
@@ -79,12 +87,6 @@ class creatureData {
         this.equipment=equipment
     }
 }
-type combatData = {
-    maxHealth:number
-    health:number
-    damageResistPercent:number
-
-}
 class Creature {
     [x: string]: any
     name?:string;
@@ -99,7 +101,7 @@ class Creature {
     constructor(name?:string,equipment?:object,baseStats?:stats){
         Object.assign(this,{type:"creature",id:1,data:new creatureData((name?name:"beast"),(equipment?equipment:emptyEquipmentSet()))})
         this.baseStats = (baseStats?baseStats:defaultStats("rat"))
-        this.strengthBonus = () => {
+        this.strengthBonus = (): Number => {
             let totalBonus = 0
             if(this.data.equipment){
                 for(let i = 0;i<Object.keys(this.data.equipment).length;i++) {
@@ -114,8 +116,9 @@ class Creature {
                     }
                 }
             }
+            return(totalBonus)
         }
-        this.intelligenceBonus = () => {
+        this.intelligenceBonus = (): Number => {
             let totalBonus = 0
             if(this.data.equipment){
                 for(let i = 0;i<Object.keys(this.data.equipment).length;i++) {
@@ -130,8 +133,9 @@ class Creature {
                     }
                 }
             }
+            return(totalBonus)
 }
-        this.willpowerBonus = () => {
+        this.willpowerBonus = (): Number => {
             let totalBonus = 0
             if(this.data.equipment){
                 for(let i = 0;i<Object.keys(this.data.equipment).length;i++) {
@@ -146,8 +150,9 @@ class Creature {
                     }
                 }
             }
+            return(totalBonus)
 }
-        this.constitutionBonus = () => {
+        this.constitutionBonus = (): Number => {
             let totalBonus = 0
             if(this.data.equipment){
                 for(let i = 0;i<Object.keys(this.data.equipment).length;i++) {
@@ -162,13 +167,14 @@ class Creature {
                     }
                 }
             }
+            return(totalBonus)
 }
-        this.stats = () => {return({
+        this.stats = (): stats => {return({
             strength:this.baseStats?.strength!+(this.strengthBonus() as unknown as number),
-            intelligence:this.baseStats?.intelligence!+(this.intelligenceBonusBonus() as unknown as number),
-            willpower:this.baseStats?.willpower!+(this.willpowerBonusBonus() as unknown as number),
-            constitution:this.baseStats?.constitution!+(this.constitutionBonusBonus() as unknown as number)
-        })}
+            intelligence:this.baseStats?.intelligence!+(this.intelligenceBonus() as unknown as number),
+            willpower:this.baseStats?.willpower!+(this.willpowerBonus() as unknown as number),
+            constitution:this.baseStats?.constitution!+(this.constitutionBonus() as unknown as number)
+        } as stats)}
         this.combatData = () => {return({
             maxHealth:(this.stats() as unknown as stats).constitution*10,
             health:(this.stats() as unknown as stats).constitution*5,
@@ -198,6 +204,47 @@ class Scene {
         this.options=options
     }
 }
+class StatusEffect {
+    name:string;
+    effect:Function;
+    constructor(name:string,effect:Function) {
+        this.name=name
+        this.effect=effect
+    }
+}
+class abilityCost {
+    description:string
+    radiation?:number
+    fire?:number
+    exhaustion?:number
+    health?:number
+    costs:{
+        radiation:number | undefined,
+        fire:number | undefined,
+        exhaustion:number | undefined,
+        health:number | undefined
+    }
+    constructor(description:string,radiation?:number,fire?:number,exhaustion?:number,health?:number) {
+        this.description=description
+        this.costs = {
+            radiation:radiation,
+            fire:fire,
+            exhaustion:exhaustion,
+            health:health
+        }
+    }
+}
+class playerAbility {
+    name:string;
+    cost:abilityCost
+    cooldown?:number;
+    constructor(name:string,cost:abilityCost,cooldown?:number) {
+        this.name=name
+        this.cost=cost
+        this.cooldown=(cooldown?cooldown:0)
+    }
+
+}
 
 
 var playerData = {
@@ -208,8 +255,10 @@ var playerData = {
         intelligence:1,
         willpower:1,
         constitution:1
-    })
+    }),
+    combatAbilities:[
 
+    ]
 }
 
 
@@ -286,12 +335,32 @@ function startCombat(enemy:Creature) {
     }
     const canvas = document.getElementById("combatCanvas")! as HTMLCanvasElement
     const canvasContext = canvas.getContext("2d")
-    const healthBarPos = {x:0,y:0}
-    canvas.style.display="block"
-    canvasContext!.strokeRect(healthBarPos.x, healthBarPos.y, 100, 20);
-    canvasContext!.fillRect(healthBarPos.x, healthBarPos.y,30,20)
+    const {height, width} = document.getElementById("mainContent")!.getBoundingClientRect()
+    canvas.height=height
+    canvas.width=width
+    function drawHealthBar() {
+        const healthBar = {x:0,y:height-((height/10)+1),fill:((width/4)/playerData.creatureInfo.combatData().maxHealth)*playerData.creatureInfo.combatData().health,height:(height/10),width:(width/4)}
+        canvasContext!.clearRect(healthBar.x,healthBar.y,healthBar.height,healthBar.width)
+        //console.log(healthBar)
+        canvas.style.display="block"
+        canvasContext!.strokeRect(healthBar.x, healthBar.y, (width/4), healthBar.height);
+        canvasContext!.fillRect(healthBar.x, healthBar.y,healthBar.fill,healthBar.height)
+    }
+    function drawAbilities() {
+        let flexAbilitiesElement = document.createElement("div") as HTMLDivElement
+        let styleThing = {
+            display:"flex"
+
+        }
+        Object.assign(flexAbilitiesElement.style,styleThing)
+        console.log(flexAbilitiesElement)
+    }
+    drawHealthBar()
+    drawAbilities()
+    // console.log(playerData.creatureInfo.stats())
+    // console.log(playerData.creatureInfo.combatData().health+" / "+playerData.creatureInfo.combatData().maxHealth)
 }
-let gregScene = new Scene("opening","Welcome to,, the RAT GAME (balls)",[
+let gregScene = new Scene("opening","Welcome to,, the RAT GAME",[
     new sceneOption("lockedOption","this option should be locked",new Scene("lockedScene","You shouldn't be here",[]),()=>false),
     new sceneOption("openingoption1","The first option. Standard",new Scene("opt1","Welcome to greg town :)",[
         new sceneOption("goBack","go back",new Scene("nowayback","no way back :(",[])),

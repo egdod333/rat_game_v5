@@ -69,6 +69,7 @@ class Creature {
                     }
                 }
             }
+            return (totalBonus);
         };
         this.intelligenceBonus = () => {
             let totalBonus = 0;
@@ -86,6 +87,7 @@ class Creature {
                     }
                 }
             }
+            return (totalBonus);
         };
         this.willpowerBonus = () => {
             let totalBonus = 0;
@@ -103,6 +105,7 @@ class Creature {
                     }
                 }
             }
+            return (totalBonus);
         };
         this.constitutionBonus = () => {
             let totalBonus = 0;
@@ -120,14 +123,22 @@ class Creature {
                     }
                 }
             }
+            return (totalBonus);
         };
         this.stats = () => {
             var _a, _b, _c, _d;
+            return {
+                strength: ((_a = this.baseStats) === null || _a === void 0 ? void 0 : _a.strength) + this.strengthBonus(),
+                intelligence: ((_b = this.baseStats) === null || _b === void 0 ? void 0 : _b.intelligence) + this.intelligenceBonus(),
+                willpower: ((_c = this.baseStats) === null || _c === void 0 ? void 0 : _c.willpower) + this.willpowerBonus(),
+                constitution: ((_d = this.baseStats) === null || _d === void 0 ? void 0 : _d.constitution) + this.constitutionBonus()
+            };
+        };
+        this.combatData = () => {
             return ({
-                strength: (_a = this.baseStats) === null || _a === void 0 ? void 0 : _a.strength,
-                intelligence: (_b = this.baseStats) === null || _b === void 0 ? void 0 : _b.intelligence,
-                willpower: (_c = this.baseStats) === null || _c === void 0 ? void 0 : _c.willpower,
-                constitution: (_d = this.baseStats) === null || _d === void 0 ? void 0 : _d.constitution
+                maxHealth: this.stats().constitution * 10,
+                health: this.stats().constitution * 5,
+                damageResistPercent: this.stats().constitution * 2
             });
         };
     }
@@ -147,6 +158,30 @@ class Scene {
         this.options = options;
     }
 }
+class StatusEffect {
+    constructor(name, effect) {
+        this.name = name;
+        this.effect = effect;
+    }
+}
+class abilityCost {
+    constructor(description, radiation, fire, exhaustion, health) {
+        this.description = description;
+        this.costs = {
+            radiation: radiation,
+            fire: fire,
+            exhaustion: exhaustion,
+            health: health
+        };
+    }
+}
+class playerAbility {
+    constructor(name, cost, cooldown) {
+        this.name = name;
+        this.cost = cost;
+        this.cooldown = (cooldown ? cooldown : 0);
+    }
+}
 var playerData = {
     menuActivated: false,
     inCombat: false,
@@ -155,7 +190,8 @@ var playerData = {
         intelligence: 1,
         willpower: 1,
         constitution: 1
-    })
+    }),
+    combatAbilities: []
 };
 function loadScene(scene) {
     var _a;
@@ -235,12 +271,31 @@ function startCombat(enemy) {
     }
     const canvas = document.getElementById("combatCanvas");
     const canvasContext = canvas.getContext("2d");
-    const healthBarPos = { x: 0, y: 0 };
-    canvas.style.display = "block";
-    canvasContext.strokeRect(healthBarPos.x, healthBarPos.y, 100, 20);
-    canvasContext.fillRect(healthBarPos.x, healthBarPos.y, 30, 20);
+    const { height, width } = document.getElementById("mainContent").getBoundingClientRect();
+    canvas.height = height;
+    canvas.width = width;
+    function drawHealthBar() {
+        const healthBar = { x: 0, y: height - ((height / 10) + 1), fill: ((width / 4) / playerData.creatureInfo.combatData().maxHealth) * playerData.creatureInfo.combatData().health, height: (height / 10), width: (width / 4) };
+        canvasContext.clearRect(healthBar.x, healthBar.y, healthBar.height, healthBar.width);
+        //console.log(healthBar)
+        canvas.style.display = "block";
+        canvasContext.strokeRect(healthBar.x, healthBar.y, (width / 4), healthBar.height);
+        canvasContext.fillRect(healthBar.x, healthBar.y, healthBar.fill, healthBar.height);
+    }
+    function drawAbilities() {
+        let flexAbilitiesElement = document.createElement("div");
+        let styleThing = {
+            display: "flex"
+        };
+        Object.assign(flexAbilitiesElement.style, styleThing);
+        console.log(flexAbilitiesElement);
+    }
+    drawHealthBar();
+    drawAbilities();
+    // console.log(playerData.creatureInfo.stats())
+    // console.log(playerData.creatureInfo.combatData().health+" / "+playerData.creatureInfo.combatData().maxHealth)
 }
-let gregScene = new Scene("opening", "Welcome to,, the RAT GAME (balls)", [
+let gregScene = new Scene("opening", "Welcome to,, the RAT GAME", [
     new sceneOption("lockedOption", "this option should be locked", new Scene("lockedScene", "You shouldn't be here", []), () => false),
     new sceneOption("openingoption1", "The first option. Standard", new Scene("opt1", "Welcome to greg town :)", [
         new sceneOption("goBack", "go back", new Scene("nowayback", "no way back :(", [])),
