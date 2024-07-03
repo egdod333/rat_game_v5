@@ -22,20 +22,6 @@
             body {
                 font-family: Consolas, monaco, monospace; font-size: 14px; font-style: normal; font-variant: normal; font-weight: 400; line-height: 20px;
             }
-            @keyframes menuAnim {
-                from {
-                    top: 0px;
-                } to {
-                    top: calc(-1*var(--menuHeight))
-                }
-            }
-            @keyframes mainContentAnim {
-                from {
-                    top: 0px;
-                } to {
-                    top: var(--menuHeight);
-                }
-            }
             #menu {
                 position: absolute;
                 background-color: green;
@@ -52,24 +38,7 @@
                 padding: 0px;
                 top:0px;
                 left: 0px;
-            }
-            .menuAnimated {
-                animation-name: menuAnim;
-                animation-duration: 1s;
-                animation-fill-mode: forwards;
-            }
-            .menuAnimatedReverse {
-                animation-name: menuAnim;
-                animation-duration: 1s;
-                animation-direction: reverse;
-                animation-fill-mode: forwards;
-            }
-            .mainContentAnimated {
-                animation-name: mainContentAnim;
-                animation-duration: 1s;
-                animation-fill-mode: forwards;
-            }
-            .mainContentAnimatedReverse {
+            }tentAnimatedReverse {
                 animation-name: mainContentAnim;
                 animation-duration: 1s;
                 animation-direction: reverse;
@@ -82,7 +51,9 @@
             menu content<br>balls
         </div>
         <div id="mainContent" class="">
-
+            <canvas id="combatCanvas" style="display: none;">
+                bestie you need to let me use a canvas
+            </canvas>
         </div>
     </body>
 </html>

@@ -1,10 +1,6 @@
 type itemType = "rat" | "equipment"
 type equipmentLocation = "head" | "leg" | "body" | "tail"
-var playerData = {
-    menuActivated:false,
-}
 
-//hey, idealized instance of my future self, add clicking on scene options please
 type stats = {
     strength:number
     intelligence:number
@@ -75,33 +71,23 @@ function defaultStats(type:itemType) {
     }
 
 }
-var ratNames = ["greg","gorg","embodiment of sin"]
-var ratColors = ["brown"]
-interface Item_Generic {
-    type: itemType;
-    id: number;
-    data: Object | false;
-}
-class ratData {
+class creatureData {
     name:string;
-    color:string;
     equipment:object;
-    constructor(name:string,color:string,equipment:object){
+    constructor(name:string,equipment:object){
         this.name=name
-        this.color=color
         this.equipment=equipment
     }
 }
-function ratName() {
-    return(ratNames[Math.floor(Math.random()*ratNames.length)])
+type combatData = {
+    maxHealth:number
+    health:number
+    damageResistPercent:number
+
 }
-function ratColor() {
-    return(ratColors[Math.floor(Math.random()*ratColors.length)])
-}
-class Rat {
+class Creature {
     [x: string]: any
     name?:string;
-    color?:string;
     equipment?:equipmentSet;
     baseStats?:stats
     stats: () => void
@@ -109,8 +95,9 @@ class Rat {
     intelligenceBonus: () => void
     willpowerBonus: () => void
     constitutionBonus: () => void
-    constructor(name?:string,color?:string,equipment?:object,baseStats?:stats){
-        Object.assign(this,{type:"rat",id:1,data:new ratData((name?name:ratName()),(color?color:ratColor()),(equipment?equipment:emptyEquipmentSet()))})
+
+    constructor(name?:string,equipment?:object,baseStats?:stats){
+        Object.assign(this,{type:"creature",id:1,data:new creatureData((name?name:"beast"),(equipment?equipment:emptyEquipmentSet()))})
         this.baseStats = (baseStats?baseStats:defaultStats("rat"))
         this.strengthBonus = () => {
             let totalBonus = 0
@@ -177,10 +164,15 @@ class Rat {
             }
 }
         this.stats = () => {return({
-            strength:this.baseStats?.strength,
-            intelligence:this.baseStats?.intelligence,
-            willpower:this.baseStats?.willpower,
-            constitution:this.baseStats?.constitution
+            strength:this.baseStats?.strength!+(this.strengthBonus() as unknown as number),
+            intelligence:this.baseStats?.intelligence!+(this.intelligenceBonusBonus() as unknown as number),
+            willpower:this.baseStats?.willpower!+(this.willpowerBonusBonus() as unknown as number),
+            constitution:this.baseStats?.constitution!+(this.constitutionBonusBonus() as unknown as number)
+        })}
+        this.combatData = () => {return({
+            maxHealth:(this.stats() as unknown as stats).constitution*10,
+            health:(this.stats() as unknown as stats).constitution*5,
+            damageResistPercent:(this.stats() as unknown as stats).constitution*2
         })}
     }
 }
@@ -189,7 +181,7 @@ class sceneOption {
     text:string;
     requirements?: (() => boolean)
     nextScene:Scene | null | Function
-    constructor(id:string,text:string,nextScene:Scene | null,requirements?:(()=>boolean)) {
+    constructor(id:string,text:string,nextScene:Scene | null | Function,requirements?:(()=>boolean)) {
         this.id=id
         this.text=(text?text:"Option")
         this.nextScene=nextScene
@@ -206,6 +198,21 @@ class Scene {
         this.options=options
     }
 }
+
+
+var playerData = {
+    menuActivated:false,
+    inCombat:false,
+    creatureInfo:new Creature("mainCharacter",undefined,{
+        strength:1,
+        intelligence:1,
+        willpower:1,
+        constitution:1
+    })
+
+}
+
+
 function loadScene(scene: Scene) {
     for(let i of document.getElementById("mainContent")!.getElementsByClassName("scene")){
         i.remove()
@@ -241,27 +248,58 @@ function extractElementFromScene(scene: Scene) {
 }
 async function toggleMenu() {
     let menuBoundingRectangle = document.getElementById("menu")?.getBoundingClientRect();
-    if(playerData.menuActivated){
-        for(let i = 0;i<menuBoundingRectangle!.height;i++) {
-            document.getElementById('menu')!.style.top = (-1*i)+'px'
-            document.getElementById('mainContent')!.style.top = (-1*i)+menuBoundingRectangle!.height+'px'
-            await new Promise((resolve)=>setTimeout(resolve,10))
+    if(!playerData.inCombat){
+        if(playerData.menuActivated){
+            for(let i = 0;i<menuBoundingRectangle!.height;i++) {
+                document.getElementById('menu')!.style.top = (-1*i)+'px'
+                document.getElementById('mainContent')!.style.top = (-1*i)+menuBoundingRectangle!.height+'px'
+                await new Promise((resolve)=>setTimeout(resolve,10))
+            }
+            document.getElementById("menu")!.style.display="none"
+        } else {
+            document.getElementById("menu")!.style.display="block"
+            for(let i=menuBoundingRectangle!.height;i>0;i--) {
+                document.getElementById('menu')!.style.top = (menuBoundingRectangle!.height-i)-menuBoundingRectangle!.height+'px'
+                document.getElementById('mainContent')!.style.top = (menuBoundingRectangle!.height-i)+'px'
+                await new Promise((resolve)=>setTimeout(resolve,10))
+            }
         }
-    } else {
-        for(let i=menuBoundingRectangle!.height;i>0;i--) {
-            document.getElementById('menu')!.style.top = (menuBoundingRectangle!.height-i)-menuBoundingRectangle!.height+'px'
-            document.getElementById('mainContent')!.style.top = (menuBoundingRectangle!.height-i)+'px'
-            await new Promise((resolve)=>setTimeout(resolve,10))
-        }
+        playerData.menuActivated=!playerData.menuActivated
     }
-    playerData.menuActivated=!playerData.menuActivated
-    
+
+}
+/*async function loadFile(file:string) {
+    //this shit dont work unless i set up a (local?) web server :(
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', file);
+    xhr.send();
+    await new Promise((resolve)=>xhr.onreadystatechange=()=>{if(xhr.readyState==4){resolve}})
+    console.log(xhr.responseText)
+}*/
+function startCombat(enemy:Creature) {
+    if(playerData.menuActivated) {
+        toggleMenu()
+    }
+    playerData.inCombat = true
+    for(let i of document.getElementById("mainContent")!.getElementsByClassName("scene")){
+        i.remove()
+    }
+    const canvas = document.getElementById("combatCanvas")! as HTMLCanvasElement
+    const canvasContext = canvas.getContext("2d")
+    const healthBarPos = {x:0,y:0}
+    canvas.style.display="block"
+    canvasContext!.strokeRect(healthBarPos.x, healthBarPos.y, 100, 20);
+    canvasContext!.fillRect(healthBarPos.x, healthBarPos.y,30,20)
 }
 let gregScene = new Scene("opening","Welcome to,, the RAT GAME (balls)",[
     new sceneOption("lockedOption","this option should be locked",new Scene("lockedScene","You shouldn't be here",[]),()=>false),
     new sceneOption("openingoption1","The first option. Standard",new Scene("opt1","Welcome to greg town :)",[
-        new sceneOption("goBack","go back",new Scene("nowayback","no way back :(",[]))
+        new sceneOption("goBack","go back",new Scene("nowayback","no way back :(",[])),
+        new sceneOption("nothing","nothing",null,undefined)
     ])),
+    new sceneOption("combatTestSceneOption","test combat ;(",(()=>{
+        startCombat(new Creature("guh",undefined,undefined))
+    }),undefined)
 ])
 function afterLoad() {
     loadScene(gregScene)
