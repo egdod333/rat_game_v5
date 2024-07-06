@@ -15,6 +15,14 @@ type stats = {
     willpower:number
     constitution:number
 }
+type statsExtra = {
+    strength:number
+    intelligence:number
+    willpower:number
+    constitution:number
+    maxHealth:number
+    damageResistPercent:number
+}
 type equipmentEffect = {
     strength:number
     intelligence:number
@@ -92,7 +100,7 @@ class Creature {
     name?:string;
     equipment?:equipmentSet;
     baseStats?:stats
-    stats: () => void
+    stats: () => statsExtra
     strengthBonus: () => void
     intelligenceBonus: () => void
     willpowerBonus: () => void
@@ -169,17 +177,17 @@ class Creature {
             }
             return(totalBonus)
 }
-        this.stats = (): stats => {return({
+        this.stats = (): statsExtra => {return({
             strength:this.baseStats?.strength!+(this.strengthBonus() as unknown as number),
             intelligence:this.baseStats?.intelligence!+(this.intelligenceBonus() as unknown as number),
             willpower:this.baseStats?.willpower!+(this.willpowerBonus() as unknown as number),
-            constitution:this.baseStats?.constitution!+(this.constitutionBonus() as unknown as number)
-        } as stats)}
-        this.combatData = () => {return({
-            maxHealth:(this.stats() as unknown as stats).constitution*10,
-            health:(this.stats() as unknown as stats).constitution*5,
-            damageResistPercent:(this.stats() as unknown as stats).constitution*2
-        })}
+            constitution:this.baseStats?.constitution!+(this.constitutionBonus() as unknown as number),
+            maxHealth:this.baseStats?.constitution!+(this.constitutionBonus() as unknown as number)*10,
+            damageResistPercent:this.baseStats?.constitution!+(this.constitutionBonus() as unknown as number)*2
+        } as statsExtra)}
+        this.combatData = {
+            health:this.stats().maxHealth,
+        }
     }
 }
 class sceneOption {
@@ -236,14 +244,18 @@ class abilityCost {
 }
 class playerAbility {
     name:string;
+    description:string;
     cost:abilityCost;
-    effect:Function;
+    effect:(creature:Creature,setCreature:(newCreature:Creature)=>void)=>void;
+    icon?:string
     cooldown?:number;
-    constructor(name:string,cost:abilityCost,effect:Function,cooldown?:number) {
+    constructor(name:string,description:string,cost:abilityCost,effect:(creature:Creature,setCreature:(newCreature:Creature)=>void)=>void,icon?:string,cooldown?:number) {
         this.name=name
+        this.description=description
         this.cost=cost
         this.effect=effect
         this.cooldown=(cooldown?cooldown:0)
+        this.icon=(icon?icon:"./assets/testIcon.png")
     }
 
 }
@@ -259,7 +271,10 @@ var playerData = {
         constitution:1
     }),
     combatAbilities:[
-
+        new playerAbility("kill","kill the beast :3",new abilityCost("No cost"),(creature:Creature,setCreature:(newCreature:Creature)=>void)=>{
+            creature.combatData.health = 0
+            console.log(creature.combatData.health)
+        })
     ]
 }
 
@@ -341,7 +356,7 @@ function startCombat(enemy:Creature) {
     canvas.height=height
     canvas.width=width
     function drawHealthBar() {
-        const healthBar = {x:0,y:height-((height/10)+1),fill:((width/4)/playerData.creatureInfo.combatData().maxHealth)*playerData.creatureInfo.combatData().health,height:(height/10),width:(width/4)}
+        const healthBar = {x:0,y:height-((height/10)+1),fill:((width/4)/playerData.creatureInfo.stats().maxHealth)*playerData.creatureInfo.combatData.health,height:(height/10),width:(width/4)}
         canvasContext!.clearRect(healthBar.x,healthBar.y,healthBar.height,healthBar.width)
         //console.log(healthBar)
         canvas.style.display="block"
@@ -351,16 +366,47 @@ function startCombat(enemy:Creature) {
     function drawAbilities() {
         let flexAbilitiesElement = document.createElement("div") as HTMLDivElement
         let styleThing = {
-            display:"flex"
+            display:"flex",
+            alignItems:"center",
+            flexDirection:"row",
+            flexWrap: "nowrap",
+            justifyContent:"flex-start",
+            alignContent:"space-between",
+            margin:"auto",
+            width:"90%",
+            overflow:"auto",
+            height:"30%",
+            padding:"10px"
 
         }
+        for(let i of playerData.combatAbilities) {
+            let newAbilityElement = document.createElement("div") as HTMLDivElement
+            Object.assign(newAbilityElement.style,{
+                backgroundColor:"green",
+                width:width/15+"px",
+                height:width/15+"px",
+                content:"url('"+i.icon+"')"
+            })
+            newAbilityElement.onmouseenter = () => {
+                Object.assign(newAbilityElement.style,{
+                    border:"3px dotted black",
+                    margin:"-3px"
+                })
+            }
+            newAbilityElement.onmouseleave = () => {
+                Object.assign(newAbilityElement.style,{
+                    border:"0px dotted black",
+                    margin:"0px"
+                })
+            }
+            flexAbilitiesElement.appendChild(newAbilityElement)
+        }
         Object.assign(flexAbilitiesElement.style,styleThing)
+        document.getElementById("mainContent")?.appendChild(flexAbilitiesElement)
         console.log(flexAbilitiesElement)
     }
     drawHealthBar()
     drawAbilities()
-    // console.log(playerData.creatureInfo.stats())
-    // console.log(playerData.creatureInfo.combatData().health+" / "+playerData.creatureInfo.combatData().maxHealth)
 }
 let gregScene = new Scene("opening","Welcome to,, the RAT GAME",[
     new sceneOption("lockedOption","this option should be locked",new Scene("lockedScene","You shouldn't be here",[]),()=>false),
@@ -372,6 +418,7 @@ let gregScene = new Scene("opening","Welcome to,, the RAT GAME",[
         startCombat(new Creature("guh",undefined,undefined))
     }),undefined)
 ])
+gregScene
 function afterLoad() {
     loadScene(gregScene)
     //document.addEventListener("mousedown",()=>toggleMenu())

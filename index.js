@@ -126,20 +126,18 @@ class Creature {
             return (totalBonus);
         };
         this.stats = () => {
-            var _a, _b, _c, _d;
+            var _a, _b, _c, _d, _e, _f;
             return {
                 strength: ((_a = this.baseStats) === null || _a === void 0 ? void 0 : _a.strength) + this.strengthBonus(),
                 intelligence: ((_b = this.baseStats) === null || _b === void 0 ? void 0 : _b.intelligence) + this.intelligenceBonus(),
                 willpower: ((_c = this.baseStats) === null || _c === void 0 ? void 0 : _c.willpower) + this.willpowerBonus(),
-                constitution: ((_d = this.baseStats) === null || _d === void 0 ? void 0 : _d.constitution) + this.constitutionBonus()
+                constitution: ((_d = this.baseStats) === null || _d === void 0 ? void 0 : _d.constitution) + this.constitutionBonus(),
+                maxHealth: ((_e = this.baseStats) === null || _e === void 0 ? void 0 : _e.constitution) + this.constitutionBonus() * 10,
+                damageResistPercent: ((_f = this.baseStats) === null || _f === void 0 ? void 0 : _f.constitution) + this.constitutionBonus() * 2
             };
         };
-        this.combatData = () => {
-            return ({
-                maxHealth: this.stats().constitution * 10,
-                health: this.stats().constitution * 5,
-                damageResistPercent: this.stats().constitution * 2
-            });
+        this.combatData = {
+            health: this.stats().maxHealth,
         };
     }
 }
@@ -176,11 +174,13 @@ class abilityCost {
     }
 }
 class playerAbility {
-    constructor(name, cost, effect, cooldown) {
+    constructor(name, description, cost, effect, icon, cooldown) {
         this.name = name;
+        this.description = description;
         this.cost = cost;
         this.effect = effect;
         this.cooldown = (cooldown ? cooldown : 0);
+        this.icon = (icon ? icon : "./assets/testIcon.png");
     }
 }
 var playerData = {
@@ -192,7 +192,12 @@ var playerData = {
         willpower: 1,
         constitution: 1
     }),
-    combatAbilities: []
+    combatAbilities: [
+        new playerAbility("kill", "kill the beast :3", new abilityCost("No cost"), (creature, setCreature) => {
+            creature.combatData.health = 0;
+            console.log(creature.combatData.health);
+        })
+    ]
 };
 function loadScene(scene) {
     var _a;
@@ -276,7 +281,7 @@ function startCombat(enemy) {
     canvas.height = height;
     canvas.width = width;
     function drawHealthBar() {
-        const healthBar = { x: 0, y: height - ((height / 10) + 1), fill: ((width / 4) / playerData.creatureInfo.combatData().maxHealth) * playerData.creatureInfo.combatData().health, height: (height / 10), width: (width / 4) };
+        const healthBar = { x: 0, y: height - ((height / 10) + 1), fill: ((width / 4) / playerData.creatureInfo.stats().maxHealth) * playerData.creatureInfo.combatData.health, height: (height / 10), width: (width / 4) };
         canvasContext.clearRect(healthBar.x, healthBar.y, healthBar.height, healthBar.width);
         //console.log(healthBar)
         canvas.style.display = "block";
@@ -284,17 +289,49 @@ function startCombat(enemy) {
         canvasContext.fillRect(healthBar.x, healthBar.y, healthBar.fill, healthBar.height);
     }
     function drawAbilities() {
+        var _a;
         let flexAbilitiesElement = document.createElement("div");
         let styleThing = {
-            display: "flex"
+            display: "flex",
+            alignItems: "center",
+            flexDirection: "row",
+            flexWrap: "nowrap",
+            justifyContent: "flex-start",
+            alignContent: "space-between",
+            margin: "auto",
+            width: "90%",
+            overflow: "auto",
+            height: "30%",
+            padding: "10px"
         };
+        for (let i of playerData.combatAbilities) {
+            let newAbilityElement = document.createElement("div");
+            Object.assign(newAbilityElement.style, {
+                backgroundColor: "green",
+                width: width / 15 + "px",
+                height: width / 15 + "px",
+                content: "url('./assets/testIcon.png')"
+            });
+            newAbilityElement.onmouseenter = () => {
+                Object.assign(newAbilityElement.style, {
+                    border: "3px dotted black",
+                    margin: "-3px"
+                });
+            };
+            newAbilityElement.onmouseleave = () => {
+                Object.assign(newAbilityElement.style, {
+                    border: "0px dotted black",
+                    margin: "0px"
+                });
+            };
+            flexAbilitiesElement.appendChild(newAbilityElement);
+        }
         Object.assign(flexAbilitiesElement.style, styleThing);
+        (_a = document.getElementById("mainContent")) === null || _a === void 0 ? void 0 : _a.appendChild(flexAbilitiesElement);
         console.log(flexAbilitiesElement);
     }
     drawHealthBar();
     drawAbilities();
-    // console.log(playerData.creatureInfo.stats())
-    // console.log(playerData.creatureInfo.combatData().health+" / "+playerData.creatureInfo.combatData().maxHealth)
 }
 let gregScene = new Scene("opening", "Welcome to,, the RAT GAME", [
     new sceneOption("lockedOption", "this option should be locked", new Scene("lockedScene", "You shouldn't be here", []), () => false),
@@ -306,6 +343,7 @@ let gregScene = new Scene("opening", "Welcome to,, the RAT GAME", [
         startCombat(new Creature("guh", undefined, undefined));
     }), undefined)
 ]);
+gregScene;
 function afterLoad() {
     loadScene(gregScene);
     //document.addEventListener("mousedown",()=>toggleMenu())
