@@ -8,6 +8,28 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var exports = {}
+Object.defineProperty(exports, "__esModule", { value: true });
+var exports = {};
+const assets = {
+    abilities: {
+        "End Turn": {
+            normal: "./assets/abilities/end turn/one.jpg",
+            cooldown: null
+        },
+        "test1": {
+            normal: "./assets/abilities/test1/inquire.png",
+            cooldown: null
+        },
+        "test2": {
+            normal: "./assets/abilities/test2/testicon.png",
+            cooldown: "./assets/abilities/test2/two.jpg"
+        }
+    },
+    characters: {
+        "player": "./assets/character sprites/rat.png"
+    }
+};
 class EquipmentItem {
     constructor(wearableOn, attributesOn) {
         this.wearableOn = wearableOn;
@@ -178,8 +200,8 @@ class playerAbility {
         this.cost = cost;
         this.effect = effect;
         this.cooldownLength = (cooldownLength ? cooldownLength : 0);
-        this.icon = (icon ? icon : "./assets/testIcon.png");
-        this.cooldownIcon = (cooldownIcon ? cooldownIcon : "./assets/inquire.png");
+        this.icon = icon;
+        this.cooldownIcon = (cooldownIcon ? cooldownIcon : null);
         this.cooldown = 0;
     }
 }
@@ -193,11 +215,11 @@ var playerData = {
         constitution: 1
     }),
     combatAbilities: [
-        new playerAbility("ability title", "description", new abilityCost("No cost"), (creature, setCreature) => {
+        new playerAbility("test1", "description", new abilityCost("No cost"), (creature, setCreature) => {
             creature.combatData.health = 0;
             setCreature(creature);
-        }, undefined, undefined, 3),
-        new playerAbility("literally nothing", "does actually nothing blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah", new abilityCost("No cost"), () => { alert(); }, "./assets/one.jpg", "./assets/two.jpg", 5),
+        }, assets.abilities.test1.normal, assets.abilities.test1.cooldown, 3),
+        new playerAbility("test2", "does actually nothing blah blah blah blah blah blah blah blah blah blah blah blah blah", new abilityCost("No cost"), () => { }, "./assets/one.jpg", "./assets/two.jpg", 5),
         new playerAbility("End Turn", "End your turn", new abilityCost("No cost"), (creature, setCreature, updateAbilities) => {
             for (let i of playerData.combatAbilities) {
                 i.cooldown = (i.cooldown >= 1 ? i.cooldown - 1 : 0);
@@ -273,7 +295,7 @@ function toggleMenu() {
     xhr.send();
     await new Promise((resolve)=>xhr.onreadystatechange=()=>{if(xhr.readyState==4){resolve}})
     return(xhr.responseText)
-}*/
+}//*/
 function startCombat(enemy) {
     let opponent = enemy;
     if (playerData.menuActivated) {
@@ -408,4 +430,12 @@ let gregScene = new Scene("Welcome to,, the RAT GAME", [
 function afterLoad() {
     loadScene(gregScene);
     //document.addEventListener("mousedown",()=>toggleMenu())
+    //const jsonData = require('./content/main.json');
+    //jsonData.key = 'new value';
+    //for(let i in gregScene) {
+    //jsonData[i] = JSON.stringify(gregScene[i])
+    //}
+    // Write the updated data back to the JSON file
+    //fs.writeFileSync('./data.json', JSON.stringify(jsonData, null, 2));
+    console.log(gregScene);
 }
