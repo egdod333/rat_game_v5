@@ -406,10 +406,10 @@ function startCombat(enemy:Creature) {
     const {height, width} = document.getElementById("combatCanvas")!.getBoundingClientRect()
     canvas.height=height
     canvas.width=width
+    canvas.style.display="block"
     function drawHealthBar() {
         const healthBar = {x:0,y:height-((height/10)+1),fill:((width/4)/playerData.creatureInfo.stats().maxHealth)*playerData.creatureInfo.combatData.health,height:(height/10),width:(width/4)}
         canvasContext!.clearRect(healthBar.x,healthBar.y,healthBar.width,healthBar.height)
-        canvas.style.display="block"
         canvasContext!.strokeRect(healthBar.x, healthBar.y, healthBar.width, healthBar.height);
         canvasContext!.fillRect(healthBar.x, healthBar.y,healthBar.fill,healthBar.height)
     }

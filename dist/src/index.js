@@ -256,7 +256,6 @@ var playerData = {
             setCreature(creature);
         }, assets.abilities.test1.normal, assets.abilities.test1.cooldown, 3),
         new playerAbility("test2", "lower health by 1", new abilityCost("No cost"), function (creature, setCreature, updateAbilities, updateHealth) {
-            //console.log(playerData.creatureInfo.combatData.health)
             playerData.creatureInfo.combatData.health--;
             updateHealth();
         }, assets.abilities.test2.normal, assets.abilities.test2.cooldown, 5),
@@ -382,14 +381,12 @@ function startCombat(enemy) {
     canvas.style.width = "100vw";
     canvas.style.display = "block";
     var _b = document.getElementById("combatCanvas").getBoundingClientRect(), height = _b.height, width = _b.width;
-    //console.log(document.getElementById("combatCanvas"))
     canvas.height = height;
     canvas.width = width;
+    canvas.style.display = "block";
     function drawHealthBar() {
         var healthBar = { x: 0, y: height - ((height / 10) + 1), fill: ((width / 4) / playerData.creatureInfo.stats().maxHealth) * playerData.creatureInfo.combatData.health, height: (height / 10), width: (width / 4) };
-        console.log(healthBar.fill);
         canvasContext.clearRect(healthBar.x, healthBar.y, healthBar.width, healthBar.height);
-        canvas.style.display = "block";
         canvasContext.strokeRect(healthBar.x, healthBar.y, healthBar.width, healthBar.height);
         canvasContext.fillRect(healthBar.x, healthBar.y, healthBar.fill, healthBar.height);
     }
