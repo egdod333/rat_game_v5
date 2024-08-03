@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>rat game v5</title>
+        <script>var exports = {};</script>
+        <script src="../dist/src/require.js"></script>
+        <script src="../dist/src/index.js"></script>
+        <style>
+            :root {
+                --menuHeight: 0px;
+                user-select: none;
+            }
+            .sceneChoice:hover::before {
+                content: "> ";
+            }
+            .sceneChoice:hover {
+                font-weight: bold;
+            }
+            .sceneChoice:not(.sceneChoice:hover)::before {
+                content: "- ";
+            }
+            .lockedSceneChoice:hover::before {
+                content: "x ";
+            }
+            body {
+                font-family: Consolas, monaco, monospace; font-size: 14px; font-style: normal; font-variant: normal; font-weight: 400; line-height: 20px;
+            }
+            #menu {
+                position: absolute;
+                background-color: green;
+                top: -50px;
+                left: 0px;
+                width: 100vw;
+                margin: 0px;
+                padding: 0px;
+            }
+            #mainContent {
+                position: absolute;
+                width: 100vw;
+                height: 100vh;
+                margin: 0px;
+                padding: 0px;
+                top:0px;
+                left: 0px;
+            }
+            canvas {
+                height: 70vh;
+                width: 100vw;
+            }
+        </style>
+    </head>
+    <body onload="afterLoad()">
+        <div id="menu">
+            menu content<br>balls
+        </div>
+        <div id="mainContent" class="">
+            <canvas id="combatCanvas" style="display:none;">
+                bestie you need to let me use a canvas
+            </canvas>
+        </div>
+    </body>
+</html>
